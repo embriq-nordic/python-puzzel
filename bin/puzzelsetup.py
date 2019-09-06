@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+#
+# Ola Ormset <oladotormsetatrejlersdotno> Rejlers Embriq AS 2019
+#
+
 import sys
 import os
 
