@@ -5,6 +5,9 @@
 #
 
 import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
+
 import os
 
 for path in ["etc", "lib"]:
