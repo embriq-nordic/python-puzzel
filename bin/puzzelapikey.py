@@ -16,7 +16,7 @@ puzzel = puzzelapi()
 
 puzzel.authenticate()
 
-print puzzel.userId
-print puzzel.accessToken
+print "UserID: %s" % puzzel.userId
+print "AccessToken: %s" % puzzel.accessToken
 
 sys.exit(0)

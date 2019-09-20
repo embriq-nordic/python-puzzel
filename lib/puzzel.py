@@ -6,6 +6,10 @@
 
 import requests
 import sys
+import datetime
+import os
+import re
+import ast
 
 import puzzelconfig
 
@@ -20,6 +24,33 @@ class puzzelapi:
         self.__dict__.update(puzzelconfig.__dict__)
         
         self.args = args
+
+        self.cfgdir = os.path.join(os.environ["HOME"], ".python-puzzel")
+        self.tokenfile = os.path.join(self.cfgdir, "accesstoken")
+        if not os.path.isdir(self.cfgdir):
+            os.mkdir(self.cfgdir)
+
+
+        return
+
+    def _getToken(self):
+        if not os.path.isfile(self.tokenfile):
+            return None, None
+
+        try:
+            data = open(self.tokenfile).readlines()
+            token = data[0]
+            info = data[1]
+        except:
+            return None, None
+                
+        return token.strip(), info.strip()
+
+    def _tokenTime(self, timestamp):
+        return int(re.match(".*\((.*)-\d*\).*", timestamp).groups()[0][:-3])
+    
+    def _setToken(self):
+        open(self.tokenfile, "w").write("%s\n%s" % (self.accessToken, self.accessinfo))
         return
     
     def post(self, api, params={}):
@@ -35,12 +66,26 @@ class puzzelapi:
         return resp
 
     def authenticate(self):
+
+        token, info = self._getToken()
+        info = ast.literal_eval(info)
+                
+        if token:
+            utcnow = int(datetime.datetime.utcnow().strftime("%s"))
+            tokentime = self._tokenTime(info["result"]["accessTokenExpiry"])
+
+            if tokentime > utcnow:
+                self.accessToken = token
+                self.accessinfo = info
+                self.userId = info["result"]["userId"]
+                print "Reusing token:", self.accessToken, self.accessinfo
+                return token, info
+        
         params = {
             "userName": "%s\%s" % (self.customerKey, self.username),
             "password": self.password
         }
         auth = self.post("/auth/credentials", params)
-
 
         returncode = auth.json()["code"]
         if returncode != 0:
@@ -54,7 +99,11 @@ class puzzelapi:
         res = self.get("/accesstokeninformation")
         self.accessinfo = res.json()
         self.userId = self.accessinfo["result"]["userId"]
+
+        self._setToken()
         
+        print "New token:", self.accessToken, self.accessinfo
+
         return self.accessToken, self.accessinfo
 
     def getvisualqueues(self):
@@ -113,3 +162,10 @@ class puzzelapi:
         res = self.post("/%s/users/%s/callout" % (self.customerKey, self.userId), params)
         return res.json()
     
+    def usersearch(self, search):
+        params = {
+            "searchString": search,
+            }
+        res = self.post("/%s/users/%s/catalog/contacts/search" % (self.customerKey, self.userId), params)
+        return res.json()
+
