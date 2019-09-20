@@ -78,7 +78,6 @@ class puzzelapi:
                 self.accessToken = token
                 self.accessinfo = info
                 self.userId = info["result"]["userId"]
-                print "Reusing token:", self.accessToken, self.accessinfo
                 return token, info
         
         params = {
@@ -102,8 +101,6 @@ class puzzelapi:
 
         self._setToken()
         
-        print "New token:", self.accessToken, self.accessinfo
-
         return self.accessToken, self.accessinfo
 
     def getvisualqueues(self):
